@@ -35,6 +35,7 @@
 
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
         
+        /* 모바일 3열 최적화 아이콘 버튼 */
         .action-btn {
             display: flex;
             align-items: center;
@@ -55,6 +56,7 @@
 
         /**
          * 📝 [사용자 데이터 박제 - PROMPT_LIST 1~90]
+         * 모든 텍스트는 요청하신 원문 그대로 보존됩니다. (한 글자도 수정하지 않음)
          */
         const PROMPT_LIST = [
             { id: 1, title: "하이패션 화보 모델", category: "인물/프로필", imageUrl: "images/1.jpg", content: " 자신감 넘치는 포즈를 취한 업로드한 피사체속 모델의 하이패션 화보입니다. 우아한 실크 미디 드레스 위에 테일러드 블레이저를 걸치고, 가벼운 트렌치 코트를 한쪽 어깨에 걸쳤습니다. 액세서리로는 미니멀한 골드 체인 목걸이, 레이어드 링, 슬림한 가죽 클러치, 그리고 뾰족한 앞코의 앵클 부츠를 매치했습니다. 전체적인 색감은 모노크롬으로, 짙은 회색, 은은한 골드 포인트, 그리고 선명한 흰색이 조화를 이룹니다. 스튜디오 조명은 블레이저의 라펠에 선명한 하이라이트를, 모델의 실루엣 주변에는 깊은 그림자를 만들어냅니다. 무광 회색 배경은 구도를 더욱 돋보이게 하고, 부드러운 림 라이트는 깊이감을 더합니다. " },
@@ -204,9 +206,11 @@
                         await navigator.share({
                             title: item.title,
                             text: item.content ? `[${item.title}]\n${item.content}` : `[${item.title}]`,
-                            url: window.location.href,
+                            // 사이트 주소 제외 로직: url 속성을 전달하지 않음
                         });
-                    } catch (e) {}
+                    } catch (e) {
+                        // 사용자가 공유를 취소하거나 실패했을 때 무시
+                    }
                 } else {
                     showToast("공유 기능을 지원하지 않는 브라우저입니다.");
                 }
