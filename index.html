@@ -4,48 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
     <title>AI네트워크마케팅연구소 프롬프트 BOOK</title>
-    
-    <!-- 필수 라이브러리 (React & Tailwind) -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 필수 라이브러리 (React 18 / Babel / Tailwind) : 버전 고정 -->
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
-        
-        body { 
-            font-family: 'Pretendard', sans-serif; 
-            background-color: #F8FAFC; 
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F8FAFC;
             color: #1E293B;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .prompt-card { 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+
+        .prompt-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .prompt-card:active { transform: scale(0.95); }
 
         .image-fade { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        
-        /* 모바일 3열 최적화 아이콘 버튼 */
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .action-btn:active {
-            transform: scale(0.85);
-            background-color: #EEF2FF;
-        }
+
+        .action-btn { display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .action-btn:active { transform: scale(0.85); background-color: #EEF2FF; }
+
+        /* tailwindcss-animate 플러그인 미사용 → 동일 효과를 직접 정의 */
+        @keyframes ai-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .animate-in { animation: ai-fade-up 0.4s ease both; }
     </style>
 </head>
 <body>
@@ -153,22 +145,34 @@
 
         const CATEGORIES = ["전체", "인물/프로필", "애니메이션", "광고/홍보", "배경/풍경", "제품 로고 이미지"];
 
-        // 아이콘 컴포넌트
+        /**
+         * 아이콘: 외부 lucide 의존성 제거 → 인라인 SVG로 안정화
+         * (lucide @latest + createIcons({elements}) 방식의 크기 덮어쓰기/타이밍 버그 해결)
+         */
+        const ICON_PATHS = {
+            "sparkles": '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
+            "search": '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+            "copy": '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+            "download": '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+            "share-2": '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+            "chevron-left": '<path d="m15 18-6-6 6-6"/>',
+            "check": '<path d="M20 6 9 17l-5-5"/>'
+        };
+
         const Icon = ({ name, size = 18, className = "" }) => {
-            const iconRef = useRef(null);
-            useEffect(() => {
-                if (window.lucide && iconRef.current) {
-                    iconRef.current.innerHTML = '';
-                    const i = document.createElement('i');
-                    i.setAttribute('data-lucide', name);
-                    iconRef.current.appendChild(i);
-                    window.lucide.createIcons({
-                        elements: [i],
-                        attrs: { width: size, height: size, class: className, strokeWidth: 2.5 }
-                    });
-                }
-            }, [name, size, className]);
-            return <span ref={iconRef} className="inline-flex"></span>;
+            const path = ICON_PATHS[name] || "";
+            return (
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={size} height={size}
+                    viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round"
+                    className={className}
+                    style={{ display: "inline-block", verticalAlign: "middle" }}
+                    dangerouslySetInnerHTML={{ __html: path }}
+                />
+            );
         };
 
         const App = () => {
@@ -195,7 +199,7 @@
                 el.value = text;
                 document.body.appendChild(el);
                 el.select();
-                document.execCommand('copy');
+                try { document.execCommand('copy'); } catch (e) {}
                 document.body.removeChild(el);
                 showToast("프롬프트가 복사되었습니다.");
             };
@@ -206,7 +210,6 @@
                         await navigator.share({
                             title: item.title,
                             text: item.content ? `[${item.title}]\n${item.content}` : `[${item.title}]`,
-                            // 사이트 주소 제외 로직: url 속성을 전달하지 않음
                         });
                     } catch (e) {
                         // 사용자가 공유를 취소하거나 실패했을 때 무시
@@ -256,15 +259,15 @@
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                                 <Icon name="search" size={14} />
                             </div>
-                            <input 
-                                type="text" placeholder="검색어를 입력하세요..." 
+                            <input
+                                type="text" placeholder="검색어를 입력하세요..."
                                 className="w-full bg-slate-50 border-none rounded-xl pl-10 pr-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                 value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                             />
                         </div>
                         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                             {CATEGORIES.map(cat => (
-                                <button 
+                                <button
                                     key={cat} onClick={() => setSelectedCategory(cat)}
                                     className={`flex-shrink-0 px-4 py-2 rounded-full text-[9px] font-black border transition-all ${selectedCategory === cat ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}
                                 >
@@ -277,7 +280,7 @@
                     {/* Grid (모바일 3열 고정) */}
                     <main className="flex-1 p-2 grid grid-cols-3 md:grid-cols-4 gap-2.5">
                         {filteredData.map(item => (
-                            <div key={item.id} className="prompt-card bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm flex flex-col relative animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div key={item.id} className="prompt-card bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm flex flex-col relative animate-in">
                                 <div className="aspect-square bg-slate-50 relative overflow-hidden cursor-pointer" onClick={() => { setSelectedItem(item); window.history.pushState({view:'detail'}, ''); }}>
                                     <img src={item.imageUrl} className="w-full h-full object-cover image-fade" loading="lazy" alt={item.title} />
                                     <div className="absolute top-1 left-1 bg-black/40 backdrop-blur-md text-white text-[5px] font-black px-1 py-0.5 rounded uppercase pointer-events-none">
@@ -301,7 +304,7 @@
 
                     {/* Detail Modal */}
                     {selectedItem && (
-                        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300 overflow-y-auto no-scrollbar">
+                        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in overflow-y-auto no-scrollbar">
                             <div className="sticky top-0 p-4 flex justify-between items-center bg-white/90 backdrop-blur-md z-10 border-b border-slate-50">
                                 <button onClick={() => window.history.back()} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
                                     <Icon name="chevron-left" size={20} />
@@ -311,11 +314,11 @@
                                     <Icon name="share-2" size={18} />
                                 </button>
                             </div>
-                            
+
                             <div className="p-5 flex flex-col gap-6 safe-bottom">
                                 <div className="relative">
                                     <img src={selectedItem.imageUrl} className="w-full rounded-[40px] shadow-2xl object-cover aspect-[4/5] border-4 border-white" alt={selectedItem.title} />
-                                    <button 
+                                    <button
                                         onClick={() => downloadImage(selectedItem.imageUrl, selectedItem.title)}
                                         className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-xl text-indigo-600 active:scale-90 transition-transform"
                                     >
@@ -330,7 +333,7 @@
                                             <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-wrap font-medium pr-10">
                                                 {selectedItem.content}
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => copyToClipboard(selectedItem.content)}
                                                 className="absolute top-6 right-6 text-indigo-600 active:scale-90 transition-transform bg-white/50 p-2 rounded-xl shadow-sm"
                                             >
@@ -346,7 +349,7 @@
 
                     {/* Global Toast */}
                     {toast && (
-                        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-slate-900 text-white rounded-full shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-4 font-black text-[11px] border border-white/10">
+                        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-slate-900 text-white rounded-full shadow-2xl flex items-center gap-2 animate-in font-black text-[11px] border border-white/10">
                             <Icon name="check" size={14} className="text-emerald-400" />
                             {toast}
                         </div>
